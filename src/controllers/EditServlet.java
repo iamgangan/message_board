@@ -14,16 +14,16 @@ import models.Message;
 import utils.DBUtil;
 
 /**
- * Servlet implementation class ShowServlet
+ * Servlet implementation class EditServlet
  */
-@WebServlet("/show")
-public class ShowServlet extends HttpServlet {
+@WebServlet("/edit")
+public class EditServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     /**
      * @see HttpServlet#HttpServlet()
      */
-    public ShowServlet() {
+    public EditServlet() {
         super();
     }
 
@@ -35,16 +35,20 @@ public class ShowServlet extends HttpServlet {
         //EntityManagerの取得
         EntityManager em = DBUtil.createEntityManager();
 
-        //URLからパラメータ(ID)取得&DB問い合わせ
+        //パラメータの取得&DB問い合わせ
         int id = Integer.parseInt(request.getParameter("id"));
         Message message = em.find(Message.class, id);
         em.close();
 
-        //取得したMessageをリクエストスコープへセット
+        //MessageとセッションIDをリクエストスコープへセット
         request.setAttribute("message", message);
+        request.setAttribute("_token", request.getSession().getId());
 
-        //詳細表示画面へ遷移
-        RequestDispatcher rd = request.getRequestDispatcher("/WEB-INF/views/messages/show.jsp");
+        //メッセージIDをセッションスコープに登録
+        request.getSession().setAttribute("message_id", message.getId());
+
+        //ページ遷移
+        RequestDispatcher rd = request.getRequestDispatcher("/WEB-INF/views/messages/edit.jsp");
         rd.forward(request, response);
 
     }
