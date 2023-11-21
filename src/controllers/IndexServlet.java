@@ -35,11 +35,13 @@ public class IndexServlet extends HttpServlet {
 
         EntityManager em = DBUtil.createEntityManager();
 
-        List<Message> messages = em.createNamedQuery("getAllMessages", Message.class).getResultList();
-        em.close();
-
-        //取得したメッセージをセット
-        request.setAttribute("messages", messages);
+        //開くページ数を取得（デフォルトは１ページ目）
+        int page = 1;
+        try {
+            page = Integer.parseInt(request.getParameter("page"));
+        } catch(NumberFormatException e) {
+            e.printStackTrace();
+        }
 
         //flushメッセージがセッションスコープにセットされていたら
         //リクエストスコープに保存する（セッションスコープからは削除）
@@ -47,6 +49,21 @@ public class IndexServlet extends HttpServlet {
             request.setAttribute("flush", request.getSession().getAttribute("flush"));
             request.getSession().removeAttribute("flush");
         }
+
+        List<Message> messages = em.createNamedQuery("getAllMessages", Message.class)
+                                    .setFirstResult(15 * (page - 1))
+                                    .setMaxResults(15)
+                                    .getResultList();
+
+        long messages_count = (long)em.createNamedQuery("getMessagesCount", Long.class).getSingleResult();
+
+        em.close();
+
+        request.setAttribute("messages", messages);
+        //全件数
+        request.setAttribute("messages_count", messages_count);
+        //ページ数
+        request.setAttribute("page", page);
 
         RequestDispatcher rd = request.getRequestDispatcher("/WEB-INF/views/messages/index.jsp");
         rd.forward(request, response);
